@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight Engine - PT bacaaja.co</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --pink-primary: #ff758c;
+            --pink-hover: #ff5e78;
+            --bg-soft: #fdf2f4;
+        }
+
+        body { 
+            background-color: var(--bg-soft); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #334155;
+        }
+
+        .navbar-custom { 
+            background: white; 
+            border-bottom: 2px solid rgba(255, 117, 140, 0.1);
+            padding: 15px 0;
+        }
+
+        .card-premium { 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); 
+            background: white;
+        }
+
+        .form-control-lg {
+            border-radius: 12px;
+            border: 2px solid #f1f5f9;
+            padding: 25px;
+        }
+
+        .btn-pink { 
+            background: var(--pink-primary); 
+            color: white; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            border: none;
+        }
+
+        .btn-pink:hover { 
+            background: var(--pink-hover); 
+            color: white; 
+        }
+
+        .badge-custom {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .badge-positif { background: #dcfce7; color: #15803d; }
+        .badge-negatif { background: #fee2e2; color: #b91c1c; }
+        .badge-netral { background: #f1f5f9; color: #475569; }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-custom sticky-top mb-4">
+        <div class="container d-flex justify-content-between">
+            <span class="navbar-brand font-weight-bold" style="color: var(--pink-primary);">
+                <i class="fas fa-brain mr-2"></i>InsightEngine
+            </span>
+            <div>
+                <span class="mr-3 text-muted">Operator: <strong>{{ role }}</strong></span>
+                <a href="/logout" class="btn btn-sm btn-outline-danger">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <h2 class="font-weight-bold mb-1">Dashboard Analisis</h2>
+                <p class="text-muted">PT bacaaja.co YouTube Monitoring System</p>
+            </div>
+            <div class="col-md-4 text-right">
+                <div class="card-premium d-inline-block px-4 py-2">
+                    <small class="d-block text-muted font-weight-bold">TOTAL DATA</small>
+                    <h3 class="mb-0">{{ total }}</h3>
+                </div>
+            </div>
+        </div>
+
+        {% if role == 'Admin' %}
+        <div class="card card-premium p-4 mb-5">
+            <form action="/analyze" method="post">
+                <div class="row">
+                    <div class="col-lg-9 mb-3 mb-lg-0">
+                        <input type="text" name="url" class="form-control form-control-lg" placeholder="Masukkan Link Video YouTube..." required>
+                    </div>
+                    <div class="col-lg-3">
+                        <button type="submit" class="btn btn-pink btn-block h-100">
+                            <i class="fas fa-search mr-2"></i>Mulai Analisis
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- TABEL PREPROCESSING -->
+            <div class="col-xl-8 mb-4">
+                <div class="card card-premium p-4 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="font-weight-bold mb-0">Data Preprocessing</h5>
+                        {% if role == 'Admin' and total > 0 %}
+                        <div>
+                            <a href="/download" class="btn btn-danger btn-sm"><i class="fas fa-file-pdf mr-1"></i>PDF</a>
+                            <a href="/reset" class="btn btn-outline-secondary btn-sm ml-2" onclick="return confirm('Hapus data?')">Reset</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-borderless">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>KOMENTAR ASLI</th>
+                                    <th>HASIL STEMMING</th>
+                                    <th>SENTIMEN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for post in posts %}
+                                <tr>
+                                    <td><div class="text-truncate" style="max-width: 250px;">{{ post.comment_original }}</div></td>
+                                    <td><em class="text-muted small">{{ post.text_stem }}</em></td>
+                                    <td>
+                                        <span class="badge-custom 
+                                        {% if post.label == 'Positif' %}badge-positif
+                                        {% elif post.label == 'Negatif' %}badge-negatif
+                                        {% else %}badge-netral{% endif %}">
+                                            {{ post.label }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">Belum ada data</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATISTIK -->
+            <div class="col-xl-4 mb-4">
+                <div class="card card-premium p-4 h-100">
+                    <h5 class="font-weight-bold mb-4 text-center">Statistik Publik</h5>
+                    <div class="chart-container">
+                        <canvas id="sentimenChart"></canvas>
+                    </div>
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span><i class="fas fa-circle text-success mr-2"></i>Positif</span>
+                            <span class="font-weight-bold">{{ chart_data[0] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span><i class="fas fa-circle text-danger mr-2"></i>Negatif</span>
+                            <span class="font-weight-bold">{{ chart_data[1] }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span><i class="fas fa-circle text-secondary mr-2"></i>Netral</span>
+                            <span class="font-weight-bold">{{ chart_data[2] }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('sentimenChart').getContext('2d');
+            const dataValues = {{ chart_data | safe }};
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positif', 'Negatif', 'Netral'],
+                    datasets: [{
+                        data: dataValues,
+                        backgroundColor: ['#10b981', '#ef4444', '#94a3b8'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
